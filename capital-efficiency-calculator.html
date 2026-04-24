@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Efficiency Calculator — Techstars Workforce</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f4f1;
+    --bg-tertiary: #eeedea;
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #888780;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --gray: #5f5e5a;
+    --gray-bg: #f1efe8;
+    --blue: #185FA5;
+    --blue-light: rgba(55,138,221,0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1e1e1c;
+      --bg-secondary: #2a2a27;
+      --bg-tertiary: #333330;
+      --text-primary: #f0efeb;
+      --text-secondary: #b4b2a9;
+      --text-tertiary: #888780;
+      --border: rgba(255,255,255,0.1);
+      --border-md: rgba(255,255,255,0.2);
+      --green: #97C459;
+      --green-bg: #1e2f0a;
+      --amber: #EF9F27;
+      --amber-bg: #2a1f08;
+      --red: #F09595;
+      --red-bg: #2d1010;
+      --gray: #b4b2a9;
+      --gray-bg: #2a2a27;
+      --blue: #85B7EB;
+      --blue-light: rgba(24,95,165,0.2);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+
+  .page-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .card {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .section-desc {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 1.25rem;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+
+  @media (max-width: 600px) {
+    .grid2, .grid3 { grid-template-columns: 1fr 1fr; }
+    .grid4 { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 420px) {
+    .grid2, .grid3, .grid4 { grid-template-columns: 1fr; }
+  }
+
+  .input-row { display: flex; flex-direction: column; gap: 5px; }
+
+  .input-row label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .input-row input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: var(--font);
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-md);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-row input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.12);
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+
+  .toggle-btn {
+    font-size: 12px;
+    font-family: var(--font);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .toggle-btn:hover { background: var(--bg-secondary); }
+
+  .toggle-btn.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-md);
+    font-weight: 500;
+  }
+
+  .assumption-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    background: var(--bg-secondary);
+    color: var(--text-tertiary);
+    border-radius: 10px;
+    display: inline-block;
+  }
+
+  .metric-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+  }
+
+  .mc-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+  .mc-value { font-size: 21px; font-weight: 500; color: var(--text-primary); }
+  .mc-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; line-height: 1.4; }
+
+  .signal-bar { height: 4px; border-radius: 2px; margin-top: 8px; }
+  .signal-label { font-size: 10px; margin-top: 4px; font-weight: 500; }
+
+  .sig-good .signal-bar { background: var(--green); }
+  .sig-good .signal-label { color: var(--green); }
+  .sig-ok .signal-bar { background: var(--amber); }
+  .sig-ok .signal-label { color: var(--amber); }
+  .sig-warn .signal-bar { background: var(--red); }
+  .sig-warn .signal-label { color: var(--red); }
+  .sig-na .signal-bar { background: var(--border); }
+  .sig-na .signal-label { color: var(--text-tertiary); }
+
+  .chart-wrap { position: relative; width: 100%; height: 200px; margin-top: 1rem; }
+
+  .reflection-item {
+    border-left: 2px solid var(--border-md);
+    padding: 0.75rem 1rem;
+    margin-bottom: 10px;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+
+  .reflection-item p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .reflection-item strong {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .reflection-item.r-warn { border-color: var(--red); background: var(--red-bg); }
+  .reflection-item.r-ok { border-color: var(--amber); background: var(--amber-bg); }
+  .reflection-item.r-good { border-color: var(--green); background: var(--green-bg); }
+  .reflection-item.r-info { border-color: var(--blue); background: var(--bg-secondary); }
+
+  .benchmark-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 0.75rem; }
+  .benchmark-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px 8px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .benchmark-table td {
+    padding: 6px 8px 6px 0;
+    color: var(--text-secondary);
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: top;
+  }
+  .benchmark-table td:first-child { color: var(--text-primary); font-weight: 500; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .badge-good { background: var(--green-bg); color: var(--green); }
+  .badge-ok { background: var(--amber-bg); color: var(--amber); }
+  .badge-warn { background: var(--red-bg); color: var(--red); }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2rem;
+    padding-bottom: 1rem;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-header">
+    <h1>Capital efficiency calculator</h1>
+    <p>Techstars Workforce &mdash; enter your numbers (assumptions welcome) and reflect on what they tell you.</p>
+  </div>
+
+  <!-- Model selector -->
+  <div class="card">
+    <div class="section-label">Business model</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" onclick="setModel('saas')" id="btn-saas">SaaS / subscription</button>
+      <button class="toggle-btn" onclick="setModel('services')" id="btn-services">Services / staffing</button>
+      <button class="toggle-btn" onclick="setModel('marketplace')" id="btn-marketplace">Marketplace / platform</button>
+    </div>
+    <div class="assumption-tag" id="model-note">Assumes recurring revenue — enter MRR as your monthly revenue figure</div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="section-title">Cash &amp; burn</div>
+    <div class="section-desc">Monthly figures. Estimates are fine — the point is to build intuition.</div>
+    <div class="grid2" style="margin-bottom: 12px;">
+      <div class="input-row">
+        <label>Cash in bank ($)</label>
+        <input type="number" id="cash" value="500000" min="0" oninput="recalc()">
+      </div>
+      <div class="input-row">
+        <label>Monthly gross burn ($)</label>
+        <input type="number" id="gross_burn" value="60000" min="0" oninput="recalc()">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="input-row">
+        <label>Monthly revenue ($)</label>
+        <input type="number" id="revenue" value="15000" min="0" oninput="recalc()">
+      </div>
+      <div class="input-row">
+        <label>MoM revenue growth (%)</label>
+        <input type="number" id="growth" value="10" min="0" max="200" oninput="recalc()">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-title">Team &amp; traction</div>
+    <div class="section-desc">Used for revenue per employee and burn multiple.</div>
+    <div class="grid3">
+      <div class="input-row">
+        <label>Full-time headcount</label>
+        <input type="number" id="headcount" value="5" min="1" oninput="recalc()">
+      </div>
+      <div class="input-row">
+        <label>Total capital raised ($)</label>
+        <input type="number" id="raised" value="1000000" min="0" oninput="recalc()">
+      </div>
+      <div class="input-row">
+        <label>New MRR added this month ($)</label>
+        <input type="number" id="new_mrr" value="3000" min="0" oninput="recalc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="card">
+    <div class="section-label">Your metrics</div>
+    <div class="grid4" id="metric-cards"></div>
+
+    <hr class="divider">
+
+    <div class="section-label">12-month cash projection</div>
+    <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px;">Assumes constant MoM growth rate. Run at 0% growth to see your floor.</div>
+    <div class="chart-wrap">
+      <canvas id="runwayChart" role="img" aria-label="Projected cash balance over 12 months based on current burn and revenue growth rate">Chart loading...</canvas>
+    </div>
+  </div>
+
+  <!-- Benchmarks -->
+  <div class="card">
+    <div class="section-label">Benchmark context</div>
+    <table class="benchmark-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Strong</th>
+          <th>Watch this</th>
+          <th>Red flag</th>
+          <th>Your stage note</th>
+        </tr>
+      </thead>
+      <tbody id="benchmark-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Reflections -->
+  <div class="card">
+    <div class="section-label">Reflection prompts</div>
+    <div id="reflections"></div>
+  </div>
+
+  <div class="footer">Built for Techstars Workforce founders &mdash; all calculations happen in your browser, nothing is stored or sent anywhere.</div>
+
+</div>
+
+<script>
+let currentModel = 'saas';
+let runwayChart = null;
+
+const modelNotes = {
+  saas: 'Assumes recurring revenue — enter MRR as your monthly revenue figure',
+  services: 'Revenue may be lumpy — use average monthly recognized revenue',
+  marketplace: 'Use net revenue (take rate), not GMV, as your revenue input'
+};
+
+const benchmarks = {
+  saas: {
+    runway: { good: '18+ mo', ok: '12–18 mo', warn: '<12 mo', note: 'Plan to fundraise at 12 mo; below 6 is urgent' },
+    burnMultiple: { good: '<1x', ok: '1–2x', warn: '>2x', note: 'Net burn ÷ new MRR. Most useful once you have recurring revenue' },
+    rpe: { good: '$50k+', ok: '$15–50k', warn: '<$15k', note: 'Annualized. Low is expected early — the trend matters more than the number' },
+    capEfficiency: { good: '>0.5x', ok: '0.2–0.5x', warn: '<0.2x', note: 'ARR ÷ total raised. Measures how much revenue each dollar of capital has produced' }
+  },
+  services: {
+    runway: { good: '18+ mo', ok: '12–18 mo', warn: '<12 mo', note: 'Services businesses can often extend runway by adjusting contractor spend' },
+    burnMultiple: { good: '<0.5x', ok: '0.5–1.5x', warn: '>1.5x', note: 'Services companies can reach lower burn multiples due to lower gross margins on growth spend' },
+    rpe: { good: '$25k+', ok: '$10–25k', warn: '<$10k', note: 'Services businesses naturally have lower RPE — target improving as you productize' },
+    capEfficiency: { good: '>0.8x', ok: '0.3–0.8x', warn: '<0.3x', note: 'Services companies can reach capital efficiency faster than pure software' }
+  },
+  marketplace: {
+    runway: { good: '18+ mo', ok: '12–18 mo', warn: '<12 mo', note: 'Two-sided marketplaces often need longer runways to reach liquidity' },
+    burnMultiple: { good: '<1.5x', ok: '1.5–3x', warn: '>3x', note: 'Marketplace businesses often require higher upfront spend to build liquidity' },
+    rpe: { good: '$30k+', ok: '$10–30k', warn: '<$10k', note: 'Net revenue basis — exclude GMV pass-through from headcount calculations' },
+    capEfficiency: { good: '>0.3x', ok: '0.1–0.3x', warn: '<0.1x', note: 'Marketplaces burn more capital to reach scale — evaluate vs. GMV growth too' }
+  }
+};
+
+function setModel(m) {
+  currentModel = m;
+  ['saas','services','marketplace'].forEach(k => {
+    document.getElementById('btn-'+k).classList.toggle('active', k === m);
+  });
+  document.getElementById('model-note').textContent = modelNotes[m];
+  recalc();
+}
+
+function fmt(n, prefix='$') {
+  if (!isFinite(n) || n === null) return '—';
+  const abs = Math.abs(n);
+  let str;
+  if (abs >= 1000000) str = (n/1000000).toFixed(1) + 'M';
+  else if (abs >= 10000) str = Math.round(n/1000) + 'k';
+  else if (abs >= 1000) str = (n/1000).toFixed(1) + 'k';
+  else str = Math.round(n).toString();
+  return prefix + str;
+}
+
+function recalc() {
+  const cash = +document.getElementById('cash').value || 0;
+  const grossBurn = +document.getElementById('gross_burn').value || 1;
+  const revenue = +document.getElementById('revenue').value || 0;
+  const growth = (+document.getElementById('growth').value || 0) / 100;
+  const headcount = Math.max(1, +document.getElementById('headcount').value || 1);
+  const raised = +document.getElementById('raised').value || 0;
+  const newMrr = +document.getElementById('new_mrr').value || 0;
+
+  const netBurn = Math.max(0, grossBurn - revenue);
+  const runway = netBurn > 0 ? cash / netBurn : Infinity;
+  const annualRevenue = revenue * 12;
+  const rpe = annualRevenue / headcount;
+  const burnMultiple = newMrr > 0 ? netBurn / newMrr : null;
+  const capEff = raised > 0 && annualRevenue > 0 ? annualRevenue / raised : null;
+
+  // Signal logic
+  function sig(val, goodThresh, okThresh, higherIsBetter) {
+    if (val === null || !isFinite(val)) return 'na';
+    if (higherIsBetter) {
+      if (val >= goodThresh) return 'good';
+      if (val >= okThresh) return 'ok';
+      return 'warn';
+    } else {
+      if (val <= goodThresh) return 'good';
+      if (val <= okThresh) return 'ok';
+      return 'warn';
+    }
+  }
+
+  const bm = currentModel;
+  const runwaySig = runway === Infinity ? 'good' : sig(runway, 18, 12, true);
+  const bmSig = burnMultiple !== null ? sig(burnMultiple, bm === 'services' ? 0.5 : bm === 'marketplace' ? 1.5 : 1, bm === 'services' ? 1.5 : bm === 'marketplace' ? 3 : 2, false) : 'na';
+  const rpeSig = sig(rpe, bm === 'services' ? 25000 : bm === 'marketplace' ? 30000 : 50000, bm === 'services' ? 10000 : bm === 'marketplace' ? 10000 : 15000, true);
+  const capSig = capEff !== null ? sig(capEff, bm === 'services' ? 0.8 : bm === 'marketplace' ? 0.3 : 0.5, bm === 'services' ? 0.3 : bm === 'marketplace' ? 0.1 : 0.2, true) : 'na';
+
+  const sigLabel = { good: 'Strong', ok: 'Watch this', warn: 'Red flag', na: '—' };
+
+  const cards = [
+    {
+      label: 'Net burn / mo',
+      value: netBurn === 0 ? '$0' : fmt(netBurn),
+      sub: `Gross burn: ${fmt(grossBurn)}`,
+      sig: netBurn === 0 ? 'good' : netBurn < grossBurn * 0.5 ? 'ok' : 'warn',
+      sigLabel: netBurn === 0 ? 'Default alive' : netBurn < grossBurn * 0.4 ? 'Revenue covering most' : 'High net burn'
+    },
+    {
+      label: 'Runway',
+      value: runway === Infinity ? '∞ mo' : Math.round(runway) + ' mo',
+      sub: runway === Infinity ? 'Revenue covers burn' : `At current net burn`,
+      sig: runwaySig,
+      sigLabel: runway === Infinity ? 'Default alive' : runway >= 18 ? 'Healthy' : runway >= 12 ? 'Plan fundraise' : runway >= 6 ? 'Fundraise now' : 'Urgent'
+    },
+    {
+      label: 'Revenue / employee',
+      value: fmt(rpe),
+      sub: 'Annualized ARR basis',
+      sig: rpeSig,
+      sigLabel: sigLabel[rpeSig]
+    },
+    {
+      label: 'Burn multiple',
+      value: burnMultiple !== null ? burnMultiple.toFixed(2) + 'x' : '—',
+      sub: burnMultiple !== null ? `$${fmt(netBurn,'').replace(/\$/g,'')} net ÷ ${fmt(newMrr,'')} new MRR` : 'Enter new MRR',
+      sig: bmSig,
+      sigLabel: sigLabel[bmSig]
+    }
+  ];
+
+  document.getElementById('metric-cards').innerHTML = cards.map(c => `
+    <div class="metric-card sig-${c.sig}">
+      <div class="mc-label">${c.label}</div>
+      <div class="mc-value">${c.value}</div>
+      <div class="mc-sub">${c.sub}</div>
+      <div class="signal-bar"></div>
+      <div class="signal-label">${c.sigLabel}</div>
+    </div>
+  `).join('');
+
+  updateChart(cash, netBurn, revenue, growth);
+  updateBenchmarks(runway, burnMultiple, rpe, capEff);
+  updateReflections(runway, burnMultiple, rpe, netBurn, grossBurn, revenue, headcount, raised, growth, newMrr);
+}
+
+function updateChart(cash, netBurn, revenue, growth) {
+  const labels = [];
+  const data = [];
+  let bal = cash;
+  let rev = revenue;
+
+  const now = new Date();
+  for (let i = 0; i <= 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    labels.push(d.toLocaleString('default', { month: 'short' }));
+    data.push(Math.max(0, Math.round(bal)));
+    const nb = Math.max(0, (netBurn - (rev - revenue)));
+    bal -= nb;
+    rev = rev * (1 + growth);
+  }
+
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const ctx = document.getElementById('runwayChart').getContext('2d');
+  if (runwayChart) { runwayChart.destroy(); }
+
+  runwayChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Cash balance',
+        data,
+        borderColor: '#185FA5',
+        backgroundColor: isDark ? 'rgba(24,95,165,0.18)' : 'rgba(55,138,221,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#185FA5'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toLocaleString() } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: isDark ? '#888780' : '#5f5e5a',
+            font: { size: 11 },
+            maxTicksLimit: 5,
+            callback: v => v >= 1000000 ? '$' + (v/1000000).toFixed(1)+'M' : '$' + (v/1000).toFixed(0)+'k'
+          },
+          grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }
+        },
+        x: {
+          ticks: { color: isDark ? '#888780' : '#5f5e5a', font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function updateBenchmarks(runway, bm, rpe, capEff) {
+  const b = benchmarks[currentModel];
+  const rows = [
+    { label: 'Runway', ...b.runway },
+    { label: 'Burn multiple', ...b.burnMultiple },
+    { label: 'Revenue / employee', ...b.rpe },
+    { label: 'Capital efficiency', ...b.capEfficiency }
+  ];
+  document.getElementById('benchmark-body').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.label}</td>
+      <td><span class="badge badge-good">${r.good}</span></td>
+      <td><span class="badge badge-ok">${r.ok}</span></td>
+      <td><span class="badge badge-warn">${r.warn}</span></td>
+      <td style="font-size:11px; color: var(--text-tertiary);">${r.note}</td>
+    </tr>
+  `).join('');
+}
+
+function updateReflections(runway, burnMultiple, rpe, netBurn, grossBurn, revenue, headcount, raised, growth, newMrr) {
+  const items = [];
+
+  if (revenue === 0 || revenue < 500) {
+    items.push({ type: 'info', title: 'Pre-revenue mode', text: 'Most of these metrics become meaningful once you have recurring revenue. For now: <strong>what would need to be true to land your first paying customer in the next 60 days?</strong> That&rsquo;s the capital efficiency question that actually matters right now.' });
+  }
+
+  const runwayMonths = isFinite(runway) ? Math.round(runway) : 99;
+  if (runwayMonths < 9) {
+    items.push({ type: 'warn', title: 'Runway pressure', text: `You have roughly <strong>${runwayMonths} months</strong> of runway. Fundraising typically takes 3&ndash;6 months and requires showing momentum. What&rsquo;s your plan: reduce burn, accelerate revenue, or bridge financing? Don&rsquo;t wait until month 6 to start the conversation.` });
+  } else if (runwayMonths >= 18) {
+    items.push({ type: 'good', title: 'Healthy runway', text: `<strong>${runwayMonths} months</strong> of runway gives you real options. The risk now is being too conservative with growth bets. Are you deploying capital fast enough against the opportunity, or is cash sitting because of uncertainty?` });
+  }
+
+  if (burnMultiple !== null && isFinite(burnMultiple)) {
+    if (burnMultiple > 2) {
+      items.push({ type: 'warn', title: 'Burn multiple is high', text: `You&rsquo;re burning <strong>${burnMultiple.toFixed(1)}x</strong> for every dollar of new MRR. This means it costs a lot to grow. Is each dollar traceable to a revenue-generating activity? Which line items would you cut first if you had to extend runway by 3 months?` });
+    } else if (burnMultiple <= 1) {
+      items.push({ type: 'good', title: 'Efficient burn multiple', text: `A <strong>${burnMultiple.toFixed(2)}x</strong> burn multiple is strong — you&rsquo;re adding meaningful ARR relative to what you spend. The next question: can you maintain this as you add headcount and expand sales motion?` });
+    } else {
+      items.push({ type: 'ok', title: 'Burn multiple in range', text: `<strong>${burnMultiple.toFixed(2)}x</strong> is within the watchable range. Trend matters more than a single snapshot — is it improving quarter over quarter? What would move it below 1x?` });
+    }
+  } else if (newMrr === 0 && revenue > 0) {
+    items.push({ type: 'info', title: 'Track your new MRR', text: 'You have revenue but haven&rsquo;t entered new MRR added this month. Burn multiple (net burn &divide; new MRR) is one of the most watched early-stage efficiency metrics by investors. <strong>Do you know how much new recurring revenue you added last month?</strong>' });
+  }
+
+  if (rpe > 0 && rpe < 15000 && revenue > 0) {
+    items.push({ type: 'ok', title: 'Revenue per employee is early', text: `At <strong>${fmt(rpe)}</strong> annualized per employee, you&rsquo;re in early-stage territory. That&rsquo;s expected. The question isn&rsquo;t how you compare to scaled companies &mdash; it&rsquo;s: <strong>does every hire have a clear hypothesis about how they&rsquo;ll generate or enable revenue?</strong>` });
+  }
+
+  if (growth > 0.20 && revenue > 0) {
+    items.push({ type: 'ok', title: 'Check your growth assumption', text: `You&rsquo;ve modeled <strong>${(growth*100).toFixed(0)}% MoM growth</strong> &mdash; that&rsquo;s aggressive even for strong early-stage B2B companies. Is this based on actual pipeline or aspiration? Try running the model at 5% and 0% growth to see your floor scenario.` });
+  }
+
+  if (netBurn > 0 && grossBurn > 0) {
+    const revenueRatio = revenue / grossBurn;
+    if (revenueRatio > 0.5 && revenueRatio < 1) {
+      items.push({ type: 'good', title: 'Revenue covering half of burn', text: `Revenue is covering <strong>${(revenueRatio*100).toFixed(0)}%</strong> of your gross burn &mdash; you&rsquo;re approaching default alive territory. What would it take to get to $0 net burn in the next 6 months? That&rsquo;s a different fundraising conversation than most pre-revenue companies have.` });
+    }
+  }
+
+  if (items.length === 0) {
+    items.push({ type: 'info', title: 'Stress test your assumptions', text: 'Your inputs look reasonable. Now try breaking the model: what happens if revenue growth stalls for 2 months? What if you add two engineers? What if you lose your biggest customer? Resilient companies have answers to these scenarios before investors ask.' });
+  }
+
+  document.getElementById('reflections').innerHTML = items.map(i => `
+    <div class="reflection-item r-${i.type}">
+      <p><strong>${i.title} &mdash;</strong> ${i.text}</p>
+    </div>
+  `).join('');
+}
+
+recalc();
+</script>
+</body>
+</html>
